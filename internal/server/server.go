@@ -7,7 +7,6 @@ import (
 	"log"
 	"log/slog"
 	"net"
-	"slices"
 	"sync"
 	"time"
 )
@@ -17,7 +16,7 @@ var allowedHosts = []string{"instagram.com", "habr.com"}
 func HandleConnection(clientConn net.Conn) {
 	defer clientConn.Close()
 
-	if err := clientConn.SetReadDeadline(time.Now().Add(30 * time.Second)); err != nil {
+	if err := clientConn.SetReadDeadline(time.Now().Add(10 * time.Second)); err != nil {
 		slog.Error("read timeout 1", "error", err)
 		return
 	}
@@ -33,10 +32,17 @@ func HandleConnection(clientConn net.Conn) {
 		return
 	}
 
-	if !slices.Contains(allowedHosts, clientHello.ServerName) {
-		slog.Error("unknown target", "target", clientHello.ServerName)
+	if clientHello.ServerName == "" {
+		slog.Error("empty client hello")
 		return
 	}
+
+	/*
+		if !slices.Contains(allowedHosts, clientHello.ServerName) {
+			slog.Error("unknown target", "target", clientHello.ServerName)
+			return
+		}
+	*/
 
 	slog.Info("proxying request", "to", clientHello.ServerName, "from", clientConn.RemoteAddr())
 
@@ -90,6 +96,7 @@ func readClientHello(reader io.Reader) (*tls.ClientHelloInfo, error) {
 	var hello *tls.ClientHelloInfo
 
 	err := tls.Server(readOnlyConn{reader: reader}, &tls.Config{
+		MinVersion: tls.VersionTLS13,
 		GetConfigForClient: func(argHello *tls.ClientHelloInfo) (*tls.Config, error) {
 			hello = new(tls.ClientHelloInfo)
 			*hello = *argHello

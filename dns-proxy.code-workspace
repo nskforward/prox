@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "../ssl"
+		},
+		{
+			"path": "../dnsx"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
+}
