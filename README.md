@@ -1,2 +1,2 @@
 # prox
-Forward Proxy
+TLS Forward Proxy
